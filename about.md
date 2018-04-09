@@ -1,22 +1,25 @@
 ---
 layout: page
 titles:
-  en: About
-  zh: 关于
-  zh-Hans: 关于
-  zh-Hant: 關於
+  en: About me
+  zh: 简暴老王
+  zh-Hans: 简暴老王
+  zh-Hant: 簡暴老王
 key: page-about
 ---
 
-Welcome to my blog! :earth_asia: :earth_africa: :earth_americas:
+立志使用各种IDE和编辑器写Hello World! :earth_asia: :earth_africa: :earth_americas:
 
 {% highlight javascript %}
 (() => console.log('hello, world!'))();
 {% endhighlight %}
 
-## Skills
+## 个人技能
 
-- HTML5, CSS3(SASS), JavaScript(ES2017, Node.js), Bash(Zsh)
-- React, React Native, Vue.js
-- gulp, webpack
-- Adobe Photoshop, Sketch
+- 硬件平台: HP, Dell, Oracle
+- 操作系统: Linux(CentoOS, Redhat, Ubuntu), Solaris
+- 数据库: MySQL, Redis, MongoDB, SybaseIQ, Versant, OpenDJ, Oracle, neo4j
+- 中间件: apache, nginx, haproxy, corba, rabbitmq, kafka, spring-mvc, hibernate
+- 开发语言: Python, Java, Object-C, Swift, JavaScript, C/C++, Go 
+- 云平台: Openstack, Docker, Kubernetes, Ceph
+- DevOps工作流: CI/CD, Ansible, Puppet, ELK
