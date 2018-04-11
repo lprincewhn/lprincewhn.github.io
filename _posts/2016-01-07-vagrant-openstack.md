@@ -24,13 +24,26 @@ modify_date: 2018-04-09
 - os-ctl1: 192.168.56.15 （控制节点，网络节点，计算节点）
 - os-cpu1: 192.168.56.16 （计算节点，供未来使用）
 
+Openstack版本：Queens
 
 为了区分这两台实验虚机和实验过程中openstack创建的虚机，下文将这两台虚机称为宿主机，而openstack虚机称为实例。
 
-克隆项目并启动上述虚拟机：
+克隆项目并启动上述虚拟机:
+1. 在~/.ssh目录生成ssh密钥对(如果已经存在，可跳过)
+``` bash
+$ ssh-keygen
+```
+
+2. 克隆项目并在项目目录下创建上面生成的ssh公钥的符号链接
 ``` bash
 $ git clone https://github.com/lprincewhn/openstack.git
 $ cd openstack
+$ ln -s ~/.ssh/id_rsa.pub id_rsa.pub
+```
+VagrantFile中定义了将该文件拷贝到虚机的root主目录下，使得本机可以直接通过root访问虚机。
+
+3. 启动Vagrant
+``` bash
 $ vagrant up
 $ vagrant ssh os-ctl1
 ```
@@ -74,7 +87,21 @@ CONFIG_PROVISION_DEMO=n
 $ sudo packstack --answer-file=allinone
 ```
 
-## 3. Neutron网络介绍
+## 3. 打开openstack dashboard
+在安装用户的所在目录可以找到admin用户的密码，如：
+```
+$ cat keystonerc_admin 
+unset OS_SERVICE_TOKEN
+    export OS_USERNAME=admin
+    export OS_PASSWORD='4be84115c3624a26'
+    export OS_AUTH_URL=http://192.168.56.15:5000/v3
+    export PS1='[\u@\h \W(keystone_admin)]\$ '
+    
+export OS_PROJECT_NAME=admin
+export OS_USER_DOMAIN_NAME=Default
+export OS_PROJECT_DOMAIN_NAME=Default
+export OS_IDENTITY_API_VERSION=3
+```
+然后通过URL在浏览器中打开dashboard：http://192.168.56.15。
 
-安装完毕之后，宿主机通过网口eth0使用NAT访问外部网络，ip是virtualbox自动分配的10.0.2.15/24，而网口eth1用作openstack实例间通信，ip是我们在Vagrant中指定的。
-openstack中的虚机通过网桥br-ex访问外部网络，因此我们需要将网络节点的eth0加入到br-ex网桥中。加入网桥后，必须将其ip配到br-ex上，否则外部无法访问（体现在：1. vagrant ssh无法登陆宿主机；2. floating ip无法访问openstack实例，因为网络节点没有floating ip的路由)
+![openstack-dashboard.PNG](http://o7gg8x7fi.bkt.clouddn.com/openstack-dashboard.PNG)
