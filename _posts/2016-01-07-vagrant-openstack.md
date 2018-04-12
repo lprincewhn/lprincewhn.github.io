@@ -45,14 +45,13 @@ VagrantFile中定义了将该文件拷贝到虚机的root主目录下，使得�
 3. 启动Vagrant
 ``` bash
 $ vagrant up
-$ vagrant ssh os-ctl1
 ```
 
 ## 2. 使用packstack安装openstack
 
 ### 2.1 安装packstack
 
-``` bash
+```
 $ sudo yum install -y centos-release-openstack-queens
 $ sudo yum install -y openstack-packstack
 ```
@@ -61,9 +60,13 @@ $ sudo yum install -y openstack-packstack
 最简单的安装方式是直接使用--allinone参数安装，但是在virtaulbox环境下，这种安装方式有两个问题：
 1. packstack默认使用设置了网关的网口所在网络进行安装，即eth0，但是virtualbox中这个网口仅用于访问外部网络，无法进行虚机间通信，因此需要将ip从10.0.2.15修改为192.168.56.15。
 2. packstack默认创建demo租户，如果要该demo正常工作，需要确保相关配置正确，如demo镜像的下载URL，demo所需的网络，为了避免这些配置工作，可以修改配置，使其不创建demo。
+
+切换到root用户进行安装：
 ```
-$ sudo packstack --allinone --gen-answer-file=allinone
-$ sudo vi allinone
+$ su -
+Password: 
+# packstack --allinone --gen-answer-file=allinone
+# vi allinone
 ```
 修改生成的配置文件：
 1. 将其中的ip 10.0.2.15修改为主机名192.168.56.15
@@ -83,8 +86,8 @@ CONFIG_REDIS_HOST=192.168.56.15
 CONFIG_PROVISION_DEMO=n
 ``` 
 开始安装：
-``` bash
-$ sudo packstack --answer-file=allinone
+```
+# packstack --answer-file=allinone
 ```
 
 ## 3. 打开openstack dashboard
