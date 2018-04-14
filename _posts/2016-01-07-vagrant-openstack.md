@@ -15,20 +15,18 @@ modify_date: 2018-04-09
 硬件要求：
 - 4核cpu
 - 至少8G内存，建议16G，（如果使用8G内存需要修改Vagrantfile，将os-ctl1的内存改为5G，os-cpu1的内存改为1G）
+- 虚拟化软件：
+    - [Virtual Box 5.6.2](https://www.virtualbox.org/wiki/Downloads)
+    - [Vagrant 2.0.2](https://www.vagrantup.com/downloads.html)
+- 实验虚机：
+    - os-ctl1: 192.168.56.15 （控制节点，网络节点，计算节点，除非针对该节点的特定用户，否则下文将其称为Allinone节点）
+    - os-cpu1: 192.168.56.16 （计算节点）
+    - os-net1: 192.168.56.17 （网络节点）
 
-虚拟化软件：
-- [Virtual Box 5.6.2](https://www.virtualbox.org/wiki/Downloads)
-- [Vagrant 2.0.2](https://www.vagrantup.com/downloads.html)
+    为了区分实验用的虚机和实验过程中openstack创建的虚机，下文将这两台虚机称为宿主机，而openstack虚机称为nova实例。
 
-实验虚机：
-- os-ctl1: 192.168.56.15 （控制节点，网络节点，计算节点，除非针对该节点的特定用户，否则下文将其称为Allinone节点）
-- os-cpu1: 192.168.56.16 （计算节点）
-
-为了区分这两台实验虚机和实验过程中openstack创建的虚机，下文将这两台虚机称为宿主机，而openstack虚机称为nova实例。
-
-安装和管理网络：192.168.56.0/24，该网络为VirtualBox的Host-Only网络，支持物理机和VirtualBox虚机间的互相访问。
-
-Openstack版本：Queens
+- 安装和管理网络：192.168.56.0/24，该网络为VirtualBox的Host-Only网络，支持物理机和VirtualBox虚机间的互相访问。
+- Openstack版本：Queens
 
 ## 2. 克隆项目并启动上述虚拟机
 1. 在~/.ssh目录生成ssh密钥对(如果已经存在，可跳过)
@@ -142,12 +140,11 @@ export OS_IDENTITY_API_VERSION=3
 通过比较两个节点上已经安装的规则，可以找到需要添加的规则如下：
 
 ```
-# iptables -I INPUT 32 -s 192.168.56.16/32 -p tcp -m multiport --dports 5671,5672 -m comment --comment "001 amqp incoming amqp_192.168.56.16" -j ACCEPT #访问控制节点上的rabbitmq-server
-# iptables -I INPUT 33 -s 192.168.56.16/32 -p tcp -m multiport --dports 3260 -m comment --comment "001 cinder incoming cinder_192.168.56.16" -j ACCEPT #计算节点互相访问cinder服务
-# iptables -I INPUT 34 -s 192.168.56.16/32 -p tcp -m multiport --dports 3306 -m comment --comment "001 mariadb incoming mariadb_192.168.56.16" -j ACCEPT #访问控制节点上的mariadb
-# iptables -I INPUT 35 -s 192.168.56.16/32 -p tcp -m multiport --dports 5900:5999 -m comment --comment "001 nova compute incoming nova_compute" -j ACCEPT #计算节点互相访问nova服务
-# iptables -I INPUT 36 -s 192.168.56.16/32 -p udp -m multiport --dports 4789 -m comment --comment "001 neutron tunnel port incoming neutron_tunnel_192.168.56.15_192.168.56.16" -j ACCEPT #访问网络节点上的neutron tunel
-# iptables -I INPUT 37 -s 192.168.56.16/32 -p tcp -m multiport --dports 16509,49152:49215 -m comment --comment "001 nova qemu migration incoming nova_qemu_migration_192.168.56.15_192.168.56.16" -j ACCEPT #计算节点上进行实例迁移时互相访问
+# iptables -I INPUT 2 -s 192.168.56.16/32 -p tcp -m multiport --dports 5671,5672 -m comment --comment "001 amqp incoming amqp_192.168.56.16" -j ACCEPT #访问控制节点上的rabbitmq-server
+# iptables -I INPUT 2 -s 192.168.56.16/32 -p tcp -m multiport --dports 3260 -m comment --comment "001 cinder incoming cinder_192.168.56.16" -j ACCEPT #访问控制节点上的cinder服务
+# iptables -I INPUT 2 -s 192.168.56.16/32 -p tcp -m multiport --dports 3306 -m comment --comment "001 mariadb incoming mariadb_192.168.56.16" -j ACCEPT #访问控制节点上的mariadb
+# iptables -I INPUT 2 -s 192.168.56.16/32 -p udp -m multiport --dports 4789 -m comment --comment "001 neutron tunnel port incoming neutron_tunnel_192.168.56.15_192.168.56.16" -j ACCEPT #访问网络节点上的neutron tunel
+# iptables -I INPUT 2 -s 192.168.56.16/32 -p tcp -m multiport --dports 16509,49152:49215 -m comment --comment "001 nova qemu migration incoming nova_qemu_migration_192.168.56.15_192.168.56.16" -j ACCEPT #计算节点间进行实例迁移时互相访问
 # service iptables save  # 修改完毕后必须保存
 ```
 
@@ -159,7 +156,47 @@ export OS_IDENTITY_API_VERSION=3
 安装完成后在Dashboard上已经可以看到两个计算节点：
 ![add-compute.PNG](http://o7gg8x7fi.bkt.clouddn.com/add-compute.PNG)
 
-从上面防火墙规则可以看出，如果按照packstack安装时默认得防火墙规则配置方法，每增加一个计算节点，都要在启动所有节点（包括控制，网络，计算节点）上增加针对新节点IP的防火墙规则，配置复杂度随着集群规模的扩大以平方速度上升。针对这个问题，一个可行的解决方案是：
-使用packstack安装完每个节点后，都手动需修改这个节点桑的防火墙规则，将其针对具体节点的ACCEPT规则合并修改为针对整个管理网络（即本文中的192.168.56.0/24）的规则。
+从上面防火墙规则可以看出，如果按照packstack安装时默认的防火墙规则配置方法，每增加一个计算节点，都要在启动所有节点（包括控制，网络，计算节点）上增加针对新节点IP的防火墙规则，配置复杂度随着集群规模的扩大以平方速度上升。针对这个问题，一个可行的解决方案是：
+使用packstack安装完每个节点后，都手动需修改这个节点的防火墙规则，将其针对具体节点的ACCEPT规则合并修改为针对整个管理网络（即本文中的192.168.56.0/24）的规则，如下：
 
+- 控制节点
+```
+# iptables -I INPUT 2 -s 192.168.56.0/24 -p tcp -m multiport --dports 5671,5672 -m comment --comment "001 amqp incoming amqp_192.168.56.0" -j ACCEPT #访问控制节点上的rabbitmq-server
+# iptables -I INPUT 2 -s 192.168.56.0/24 -p tcp -m multiport --dports 3260 -m comment --comment "001 cinder incoming cinder_192.168.56.0" -j ACCEPT #访问控制节点上的cinder服务
+# iptables -I INPUT 2 -s 192.168.56.0/24 -p tcp -m multiport --dports 3306 -m comment --comment "001 mariadb incoming mariadb_192.168.56.0" -j ACCEPT #访问控制节点上的mariadb
+```
 
+- 网络节点
+```
+# iptables -I INPUT 2 -s 192.168.56.0/24 -p udp -m multiport --dports 4789 -m comment --comment "001 neutron tunnel port incoming neutron_tunnel_192.168.56.0" -j ACCEPT #网络节点和计算节点两两间的neutron tunel
+```
+
+- 计算节点
+```
+# iptables -I INPUT 2 -s 192.168.56.0/24 -p udp -m multiport --dports 4789 -m comment --comment "001 neutron tunnel port incoming neutron_tunnel_192.168.56.0" -j ACCEPT #网络节点和计算节点两两间的neutron tunel
+# iptables -I INPUT 2 -s 192.168.56.0/24 -p tcp -m multiport --dports 16509,49152:49215 -m comment --comment "001 nova qemu migration incoming nova_qemu_migration_192.168.56.0" -j ACCEPT #计算节点间进行实例迁移时互相访问
+```
+
+## 5. 增加网络节点
+
+拷贝一份之前的packstack answer file，然后修改其中的两个参数：
+- CONFIG_NETWORK_HOSTS，增加新的计算节点IP 192.168.56.17。
+- EXCLUDE_SERVERS，为了避免影响已安装的节点os-ctl1和os-cpu1，将其IP加入该参数，使得packstack不会对这些节点做任何操作。
+```
+# cp addcpu addnet
+# diff addcpu addnet         
+86c86
+< EXCLUDE_SERVERS=192.168.56.15
+---
+> EXCLUDE_SERVERS=192.168.56.15,192.168.56.16
+101c101
+< CONFIG_NETWORK_HOSTS=192.168.56.15
+---
+> CONFIG_NETWORK_HOSTS=192.168.56.15,192.168.56.17
+# packstack --answer-file=addnet
+```
+
+如果之前已经把现有的两个节点的防火墙策略修改为针对网络放通，则此时安装就无需再次修改，可以直接安装成功。
+
+## 6. 删除计算节点和网络节点
+Openstack中还没有提供删除节点的接口，需要到数据库中手动清除。
