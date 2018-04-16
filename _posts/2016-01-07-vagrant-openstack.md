@@ -19,9 +19,9 @@ modify_date: 2018-04-09
     - [Virtual Box 5.6.2](https://www.virtualbox.org/wiki/Downloads)
     - [Vagrant 2.0.2](https://www.vagrantup.com/downloads.html)
 - 实验虚机：
-    - os-ctl1: 192.168.56.15 （控制节点，网络节点，计算节点，除非针对该节点的特定用户，否则下文将其称为Allinone节点）
-    - os-cpu1: 192.168.56.16 （计算节点）
-    - os-net1: 192.168.56.17 （网络节点）
+    - os-ctl1: 192.168.56.15 （控制节点，网络节点，计算节点，除非针对该节点的特定用户，否则下文将其称为Allinone节点），默认配置2个cpu，8G内存。
+    - os-cpu1: 192.168.56.16 （计算节点），默认配置2个cpu，1G内存。
+    - os-net1: 192.168.56.17 （网络节点），默认配置1个cpu，512M内存。
 
     为了区分实验用的虚机和实验过程中openstack创建的虚机，下文将这两台虚机称为宿主机，而openstack虚机称为nova实例。
 
@@ -196,7 +196,7 @@ export OS_IDENTITY_API_VERSION=3
 # packstack --answer-file=addnet
 ```
 
-如果之前已经把现有的两个节点的防火墙策略修改为针对网络放通，则此时安装就无需再次修改，可以直接安装成功。
+如果之前已经把现有的两个节点的防火墙策略修改为针对网络放通，则此时安装就无需再次修改，可以直接成功。
 
 ## 6. 删除计算节点和网络节点
 Openstack中还没有提供删除节点的接口，需要到数据库中手动清除。
