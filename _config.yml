@@ -78,7 +78,7 @@ gitalk:
 leancloud:
   app_id:  1WJUAf2IlyQ9RBjamx8myzDv-gzGzoHsz
   app_key:  7CwlxbWG13dYp7jQhgq8NPMW
-  app_class:  Github Page
+  app_class:  GithubPage
 
 # mathjax: true
 # mathjax_autoNumber: true
