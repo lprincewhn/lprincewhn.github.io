@@ -125,6 +125,7 @@ plugins:
   - jekyll-feed
   - jekyll-paginate
   - jemoji
+  - jekyll-seo-tag
 
 ## Server ##
 server_url: "0.0.0.0"
