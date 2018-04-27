@@ -20,10 +20,10 @@
                     <rect x="7" y="61" width="66" height="30"></rect>
                 </g>
                 <text id="H" fill="#FFFFFF" font-family="Helvetica-Bold, Helvetica" font-size="42" font-weight="bold">
-                    <tspan x="40" y="147">H</tspan>
+                    <tspan x="40" y="91">H</tspan>
                 </text>
                 <text id="W" fill="#000000" font-family="Helvetica-Bold, Helvetica" font-size="40" font-weight="bold">
-                    <tspan x="82" y="146">W</tspan>
+                    <tspan x="82" y="90">W</tspan>
                 </text>
             </g>
         </g>
