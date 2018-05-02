@@ -10,17 +10,20 @@ modify_date: 2018-05-02
 
 <!--more-->
 
-## sshexpect简介
+## 简介
 
 sshexpect的目的是实现对系统的普适性，其仅仅依赖于Unix操作系统的ssh和scp命令。pexpect模块内嵌其中，因此对python库也没有任何要求。
 
 sshexpect通过有限状态机(FSM)模型定义日常维护过程中最常见的工作模式：
 
 ```mermaid
-graph TD;
-    运行检查命令-->分析输出;
-    分析输出-->判断下一步;
-    判断下一步-->运行检查命令;
+graph TB;
+    A[运行检查命令]
+    B[分析输出]
+    C[判断下一步]
+    A-->B;
+    B-->C;
+    C-->A;
 ```
 
 ## 下载地址

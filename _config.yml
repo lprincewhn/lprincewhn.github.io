@@ -17,7 +17,7 @@ text_color_theme: default #eg: default | dark | forest | ocean | chocolate | ora
 baseurl: /
 title: 简暴Hello World
 description: > #this means to ignore newlines until "nav_lists:"
-  
+
 
 nav_lists:
   - titles:
@@ -82,7 +82,7 @@ leancloud:
 
 # mathjax: true
 # mathjax_autoNumber: true
-# mermaid: true
+mermaid: true
 # chart: true
 
 ## Paginate ##
