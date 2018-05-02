@@ -1,20 +1,20 @@
 ---
 layout: post
-title: 基于pexpect模块的有限状态机-sshexpect
+title: 基于pexpect模块的有限状态机-fsmexpect
 key: 20160616
-tags: ssh pexpect fsm python
+tags: pexpect fsm python ssh scp
 modify_date: 2018-05-02
 ---
 
-在自动化运维工作中，puppet, ansible等工具有效的解决了系统部署问题，但是在日常维护方面，个人觉得这些工具还是显得太重了，要想熟练使用他们相当于要系统学习一门新的语言。特别是针对一些不能随便安装软件包的主机，或者非Linux的Unix主机，这些热门的自动化运维工具使用起来受的局限较多，sshexpect正是诞生于这种局限。
+在自动化运维工作中，puppet, ansible等工具有效的解决了系统部署问题，但是在日常维护方面，个人觉得这些工具还是显得太重了，要想熟练使用他们相当于要系统学习一门新的语言。特别是针对一些不能随便安装软件包的主机，或者非Linux的Unix主机，这些热门的自动化运维工具使用起来受的局限较多，fsmexpect正是诞生于这种局限。
 
 <!--more-->
 
 ## 简介
 
-sshexpect的目的是实现对系统的普适性，其仅仅依赖于Unix操作系统的ssh和scp命令。pexpect模块内嵌其中，因此对python库也没有任何要求。
+fsmexpect的目的是实现对系统的普适性，其仅仅依赖于Unix操作系统的ssh和scp命令。pexpect模块内嵌其中，因此对python库也没有任何要求。
 
-sshexpect通过有限状态机(FSM)模型定义日常维护过程中最常见的工作模式：
+fsmexpect通过有限状态机(FSM)模型定义日常维护过程中最常见的工作模式：
 
 ```mermaid
 graph TB;
@@ -28,7 +28,7 @@ graph TB;
 
 ## 下载地址
 
-https://github.com/lprincewhn/sshexpect/releases/latest
+[https://github.com/lprincewhn/fsmexpect/releases/latest](https://github.com/lprincewhn/fsmexpect/releases/latest)
 
 ## 原理
 
@@ -64,11 +64,11 @@ FSMState是FSM的调度单元，目前FSMState有4种类型：
 以下为定义该FSM的代码：
 
 ``` python
-cmd_state = FSMState("command", cmd)
-succ_state= FSMState("end")
-pass_state = FSMState("command", password)
-fail_state = FSMState("exception", AuthenticationFailed())
-continue_state = FSMState("operate", " ")
+cmd_state = fsmexpect.FSMState("command", cmd)
+succ_state= fsmexpect.FSMState("end")
+pass_state = fsmexpect.FSMState("command", password)
+fail_state = fsmexpect.FSMState("exception", AuthenticationFailed())
+continue_state = fsmexpect.FSMState("operate", " ")
 cmd_state.add_next_state(shell_prompt, succ_state)                 # Success directly
 cmd_state.add_next_state('.+assword:', pass_state)                 # Need password
 cmd_state.add_next_state('--More--\(\d+%\)', continue_state)       # Long output
