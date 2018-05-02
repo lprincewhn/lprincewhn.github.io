@@ -28,7 +28,7 @@ graph TB;
 
 ## 下载地址
 
-https://github.com/lprincewhn/sshexpect/releases/tag/0.2
+https://github.com/lprincewhn/sshexpect/releases/latest
 
 ## 原理
 
