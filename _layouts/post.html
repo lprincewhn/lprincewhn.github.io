@@ -28,8 +28,13 @@ layout: base
 					{%- else -%}
 						<meta itemprop="dateModified" content="{{ page.date | date_to_xmlschema }}">
 					{%- endif -%}
-					<div class="article-license">
-						{%- include components/license.html -%}
+					<div>
+						<div class="article-license">
+							{%- include components/license.html -%}
+						</div>
+						<div class="wechat-qrcode">
+							<img width="120px" height="120px" src="http://o7gg8x7fi.bkt.clouddn.com/qrcode_for_gh_3157cc34a6ae_258.jpg" />
+						</div>
 					</div>
 				</footer>
 			</article>
