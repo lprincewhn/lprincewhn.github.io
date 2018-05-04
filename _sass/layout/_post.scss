@@ -18,10 +18,16 @@
     &>span {
       color: $text-color-l;
     }
-    &>.article-license {
-      position: relative;
+    &>div>.article-license {
+      display: inline-block;
       max-width: 30rem;
       margin: .8rem 0;
+    }
+    &>div>.wechat-qrcode {
+      display: inline-block;
+      margin: .8rem 0;
+      vertical-align: top;
+      margin-left: 1.6rem;
     }
   }
   .article-previous-next {
