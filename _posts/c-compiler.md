@@ -29,3 +29,16 @@ list      list content of the directory
 move      rename content in directory
 del       delete content in directory
 ```
+win
+Developer Command Prompt for VS2017:
+```
+> cl /I ..\ffmpeg-4.0.2-win32-dev\include\  list.c /link /libpath:..\ffmpeg-4.0.2-win32-dev\lib\ avcodec.lib avformat.lib avutil.lib
+> set PATH=C:\Users\huaning.wang\learning\imooc\FFmpeg音视频核心技术精讲与实战\ffmpeg-4.0.2-win32-shared\bin;%PATH%
+> list.exe
+```
+x64 Native Tools Command Prompt for VS 2017
+```
+> cl /I ..\ffmpeg-4.0.2-win64-dev\include\  list.c /link /libpath:..\ffmpeg-4.0.2-win64-dev\lib\ avcodec.lib avformat.lib avutil.lib
+> set PATH=C:\Users\huaning.wang\learning\imooc\FFmpeg音视频核心技术精讲与实战\ffmpeg-4.0.2-win64-shared\bin;%PATH%
+> list.exe
+```
