@@ -30,7 +30,7 @@ modify_date: 2018-04-09
 
 ## 2. 克隆项目并启动上述虚拟机
 
-``` bash
+```
 $ git clone https://github.com/lprincewhn/openstack.git
 $ cd openstack
 $ vagrant up
