@@ -19,12 +19,12 @@ MobaXterm作为一个良心的终端工具，在其MobaSSHTunnel菜单项可以�
 
 ## 1. 本地端口转发（Local port forwarding）
 
-本地端口转发实现的功能：把ssh服务器能够访问的ip和端口映射到客户端的指定端口，这样在客户端网络内访问客户端的指定端口就能访问到ssh服务器所在网络中的服务。经常使用的场景是客户端自身通过localhost:<指定端口>去访问。
+实现功能：把ssh服务器能够访问的ip和端口映射到客户端的指定端口，这样在客户端网络内访问客户端的指定端口就能访问到ssh服务器所在网络中的服务。经常使用的场景是客户端自身通过localhost:<指定端口>去访问。
 
 ![SSH-Local-Portforwarding.PNG](http://lprincewhn.github.io/assets/images/SSH-Local-Portforwarding.PNG)
 
 ```
-ssh -L <本地端口>:<目的地址>:<目的端口> core@192.168.56.80
+ssh -L <本地端口>:<目的地址>:<目的端口> <登陆用户>@<SSH服务器>
 ```
 
 参数说明：
@@ -32,12 +32,13 @@ ssh -L <本地端口>:<目的地址>:<目的端口> core@192.168.56.80
 - 目的地址是相对于ssh服务器而言的，可以是localhost，此时表示ssh服务器本身。
 
 ## 2. 远程端口转发（Remote port forwarding）
-远程端口转发实现的功能是把ssh客户端能访问到的ip和端口映射到ssh服务器的指定端口，这样在服务器端的网络内访问服务器的指定端口就能访问到ssh客户端算在网络中的服务。
+
+实现功能：把ssh客户端能访问到的ip和端口映射到ssh服务器的指定端口，这样在服务器端的网络内访问服务器的指定端口就能访问到ssh客户端算在网络中的服务。
 
 ![SSH-Remote-Portforwarding.PNG](http://lprincewhn.github.io/assets/images/SSH-Remote-Portforwarding.PNG)
 
 ```
-ssh -R <远程端口>:<目的地址>:<目的端口> core@192.168.56.80
+ssh -R <远程端口>:<目的地址>:<目的端口> <登陆用户>@<SSH服务器>
 ```
 
 参数说明：
@@ -51,7 +52,7 @@ ssh -R <远程端口>:<目的地址>:<目的端口> core@192.168.56.80
 ![SSH-Dynamic-Portforwarding.PNG](http://lprincewhn.github.io/assets/images/SSH-Dynamic-Portforwarding.PNG)
 
 ```
-ssh -D <本地端口> core@192.168.56.80
+ssh -D <本地端口> <登陆用户>@<SSH服务器>
 ```
 
 参数说明：
