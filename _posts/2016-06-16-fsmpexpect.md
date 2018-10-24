@@ -41,7 +41,7 @@ FSMState是FSM的调度单元，目前FSMState有4种类型：
 每个FSMState对象表示FSM种的一个状态，FSM将通过执行命令并分析输出后触发状态的迁移，而状态迁移后将触发新的命令执行。
 下图是一个运行特权命令（可能需要密码）的FSM：
 
-![fsm.jpg](http://o7gg8x7fi.bkt.clouddn.com/fsm.jpg)
+![fsm.jpg](http://lprincewhn.github.io/assets/images/fsm.jpg)
 
 **State 1.** 该状态将所需要运行的命令发送到远程主机并执行，在输出结果种查找预期的输出字符串，并根据以下条件进行状态迁移：
   - State 2, 输出结果提示需要密码，如找到“Passwrod: ”。

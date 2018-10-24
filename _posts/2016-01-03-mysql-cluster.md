@@ -8,7 +8,7 @@ modify_date: 2016-09-09
 
 Mysql集群方案的特点是无需共享存储，其数据通过主从同步来实现各节点的一致性。整个集群方案架构如下图，其中共有3类节点。
 
-![mysql-cluster-architecture.jpg](http://o7gg8x7fi.bkt.clouddn.com/mysql-cluster-architecture.jpg)
+![mysql-cluster-architecture.jpg](http://lprincewhn.github.io/assets/images/mysql-cluster-architecture.jpg)
 
 <!--more-->
 
