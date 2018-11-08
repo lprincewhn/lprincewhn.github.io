@@ -79,13 +79,13 @@ CONFIG_REDIS_HOST=192.168.56.15
 CONFIG_PROVISION_DEMO=n
 ```
 
-**Step 4开始安装**
+**Step 4 开始安装**
 ```
 # packstack --answer-file=allinone
 ```
 
 ## 4. 打开Openstack Dashboard
-在安装用户的所在目录可以找到admin用户的密码，如：
+在安装用户的HOME目录可以找到admin用户的密码，如：
 ```
 # cat keystonerc_admin
 unset OS_SERVICE_TOKEN
@@ -174,6 +174,7 @@ export OS_IDENTITY_API_VERSION=3
 拷贝一份之前的packstack answer file，然后修改其中的两个参数：
 - CONFIG_NETWORK_HOSTS，增加新的计算节点IP 192.168.56.17。
 - EXCLUDE_SERVERS，为了避免影响已安装的节点os-ctl1和os-cpu1，将其IP加入该参数，使得packstack不会对这些节点做任何操作。
+
 ```
 # cp addcpu addnet
 # diff addcpu addnet         
