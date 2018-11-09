@@ -79,13 +79,13 @@ CONFIG_REDIS_HOST=192.168.56.15
 CONFIG_PROVISION_DEMO=n
 ```
 
-**Step 4开始安装**
+**Step 4 开始安装**
 ```
 # packstack --answer-file=allinone
 ```
 
 ## 4. 打开Openstack Dashboard
-在安装用户的所在目录可以找到admin用户的密码，如：
+在安装用户的HOME目录可以找到admin用户的密码，如：
 ```
 # cat keystonerc_admin
 unset OS_SERVICE_TOKEN
