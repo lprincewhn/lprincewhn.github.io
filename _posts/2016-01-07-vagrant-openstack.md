@@ -114,6 +114,7 @@ export OS_IDENTITY_API_VERSION=3
 
 ```
 # cp allinone addcpu
+# vi addcpu
 # diff allinone addcpu  
 86c86
 < EXCLUDE_SERVERS=
@@ -146,6 +147,7 @@ export OS_IDENTITY_API_VERSION=3
 ```
 
 安装完成后在Dashboard上已经可以看到两个计算节点：
+
 ![add-compute.jpg](http://lprincewhn.github.io/assets/images/add-compute.jpg)
 
 从上面防火墙规则可以看出，如果按照packstack安装时默认的防火墙规则配置方法，每增加一个计算节点，都要在启动所有节点（包括控制，网络，计算节点）上增加针对新节点IP的防火墙规则，配置复杂度随着集群规模的扩大以平方速度上升。针对这个问题，一个可行的解决方案是：
@@ -177,6 +179,7 @@ export OS_IDENTITY_API_VERSION=3
 
 ```
 # cp addcpu addnet
+# vi addnet
 # diff addcpu addnet         
 86c86
 < EXCLUDE_SERVERS=192.168.56.15

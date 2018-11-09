@@ -11,9 +11,14 @@ k8s是目前最流行的容器编排工具，不过k8s的安装部署一直是�
 
 <!--more-->
 
+## 0. 在3个节点上准备kubeadm运行环境，《》第2，3节。
+
+
 export PATH=$PATH:/opt/bin
 
-[root@k8s1 ~]# ip addr add dev lo 192.168.56.40
+## 1. 准备负载均衡器：
+[root@k8s1 ~]# ip addr add 192.168.56.40/24 dev eth1
+[root@k8s1 ~]# ip addr add 192.168.56.40 dev lo
 [root@k8s1 ~]# yum install -y ipvsadm
 [root@k8s1 ~]# ipvsadm -A -t 192.168.56.40:6443 -s rr
 [root@k8s1 ~]# ipvsadm -a -t 192.168.56.40:6443 -r 192.168.56.41:6443 -g
@@ -21,10 +26,10 @@ export PATH=$PATH:/opt/bin
 IP Virtual Server version 1.2.1 (size=4096)
 Prot LocalAddress:Port Scheduler Flags
   -> RemoteAddress:Port           Forward Weight ActiveConn InActConn
-TCP  192.168.56.40:7443 rr
-  -> 192.168.56.41:7443           Route   1      0          0
+TCP  192.168.56.40:6443 rr
+  -> 192.168.56.41:6443           Route   1      0          0
 
-
+## 2. 安装第1个控制节点
 [root@k8s1 ~]# kubeadm init --config kubeadm-config.yaml
 [init] using Kubernetes version: v1.11.2
 [preflight] running pre-flight checks
@@ -32,7 +37,6 @@ TCP  192.168.56.40:7443 rr
 [preflight] Some fatal errors occurred:
         [ERROR FileContent--proc-sys-net-bridge-bridge-nf-call-iptables]: /proc/sys/net/bridge/bridge-nf-call-iptables contents are not set to 1
         [ERROR Swap]: running with swap on is not supported. Please disable swap
-        [ERROR KubeletVersion]: the kubelet version is higher than the control plane version. This is not a supported version skew and may lead to a malfunctional cluster. Kubelet version: "1.12.1" Control plane version: "1.11.2"
 [preflight] If you know what you are doing, you can make a check non-fatal with `--ignore-preflight-errors=...`
 
 yum install -y socat
