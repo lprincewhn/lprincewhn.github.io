@@ -102,7 +102,7 @@ export OS_IDENTITY_API_VERSION=3
 
 然后通过URL在浏览器中打开dashboard：http://192.168.56.15。
 
-![openstack-dashboard.PNG](http://lprincewhn.github.io/assets/images/openstack-dashboard.PNG)
+![openstack-dashboard.jpg](http://lprincewhn.github.io/assets/images/openstack-dashboard.jpg)
 
 ## 5. 增加计算节点
 
@@ -146,7 +146,7 @@ export OS_IDENTITY_API_VERSION=3
 ```
 
 安装完成后在Dashboard上已经可以看到两个计算节点：
-![add-compute.PNG](http://lprincewhn.github.io/assets/images/add-compute.PNG)
+![add-compute.jpg](http://lprincewhn.github.io/assets/images/add-compute.jpg)
 
 从上面防火墙规则可以看出，如果按照packstack安装时默认的防火墙规则配置方法，每增加一个计算节点，都要在启动所有节点（包括控制，网络，计算节点）上增加针对新节点IP的防火墙规则，配置复杂度随着集群规模的扩大以平方速度上升。针对这个问题，一个可行的解决方案是：
 使用packstack安装完每个节点后，都手动需修改这个节点的防火墙规则，将其针对具体节点的ACCEPT规则合并修改为针对整个管理网络（即本文中的192.168.56.0/24）的规则，如下：
@@ -174,6 +174,7 @@ export OS_IDENTITY_API_VERSION=3
 拷贝一份之前的packstack answer file，然后修改其中的两个参数：
 - CONFIG_NETWORK_HOSTS，增加新的计算节点IP 192.168.56.17。
 - EXCLUDE_SERVERS，为了避免影响已安装的节点os-ctl1和os-cpu1，将其IP加入该参数，使得packstack不会对这些节点做任何操作。
+
 ```
 # cp addcpu addnet
 # diff addcpu addnet         
