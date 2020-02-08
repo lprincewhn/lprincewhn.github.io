@@ -6,7 +6,7 @@ tags: aws security role
 modify_date: 2020-02-07
 ---
 
-AWS的可通过两类实体进行授权：User和Role。其中User赋予的权限是长期的，客户端使用User登陆时都会拿到该User的credential，这个credential是长期有效的。除非手动将其失效，否则用户可以永久使用这个credential访问AWS资源。而Role赋予的权限是临时，客户端可通过assumeRole的调用获取该角色的credential。和User credential的区别在于，Role credential存在有效期，有效期过后该credential自动失效。因此，利用Role credential可实现临时授权。
+AWS的可通过两类实体进行授权：User和Role。其中User赋予的权限是永久的，客户端使用IAM User登陆拿到这个credential后，除非手动将其失效，否则可以永久使用这个credential访问AWS资源。而Role赋予的权限是临时，客户端可通过API调用assumeRole获取该角色的credential。和User credential的区别在于，Role credential存在有效期，有效期过后该credential自动失效。因此，利用Role credential可实现临时授权。
 
 <!--more-->
 
@@ -17,17 +17,17 @@ AWS的可通过两类实体进行授权：User和Role。其中User赋予的权�
 
 ### 0.2 实验环境
 
-![2020-02-07-flow-1.png](http://lprincewhn.github.io/assets/images/2020-02-07-flow-1.png)
+![2020-02-07-flow-1.jpg](http://lprincewhn.github.io/assets/images/2020-02-07-flow-1.jpg)
 
-IAM
-    User: credadmin，管理员，负责生成访问S3资源的临时credential，并且将其存入Secret Manager中，因此需要Secret Manager的写入权限。
-    Role: EC2Normal，附加到EC2实例上的角色，默认情况，EC2实例中运行的程序使用该角色访问其他AWS资源，该角色不包含敏感S3桶的访问权限。
-    Role: SensitiveS3Access，用于访问敏感S3桶的角色。
-Secret Manager
-    Secret：SensitiveS3，用于存储临时credential，其中包括AccessKeyId，SecretAccessKey，SessionToken。
-EC2和S3
-    EC2：用于验证，运行访问敏感S3桶的应用程序。
-    Bucket：Sensitive.xxxxxx，用于验证，存放敏感数据的S3桶。
+- IAM
+    - User: credadmin，管理员，负责生成访问S3资源的临时credential，并且将其存入Secret Manager中，因此需要Secret Manager的写入权限。
+    - Role: EC2Normal，附加到EC2实例上的角色，默认情况，EC2实例中运行的程序使用该角色访问其他AWS资源，该角色不包含敏感S3桶的访问权限。
+    - Role: SensitiveS3Access，用于访问敏感S3桶的角色。
+- Secret Manager
+    - Secret：SensitiveS3，用于存储临时credential，其中包括AccessKeyId，SecretAccessKey，SessionToken。
+- EC2和S3
+    - EC2：用于验证，运行访问敏感S3桶的应用程序。
+    - Bucket：Sensitive.xxxxxx，用于验证，存放敏感数据的S3桶。
 
 ## 1. 步骤
 
@@ -35,30 +35,30 @@ EC2和S3
 
 credamin的访问类型为“Programmatic access”，这种类型的用户会自动生成通过API访问AWS资源所需的User credential，即Access Key ID和Secret Access Key，用户创建成功后请记下这两个值。
 
-![2020-02-07-credadmin-1.png](http://lprincewhn.github.io/assets/images/2020-02-07-credadmin-1.png)
+![2020-02-07-credadmin-1.jpg](http://lprincewhn.github.io/assets/images/2020-02-07-credadmin-1.jpg)
 
-![2020-02-07-credadmin-2.png](http://lprincewhn.github.io/assets/images/2020-02-07-credadmin-2.png)
+![2020-02-07-credadmin-2.jpg](http://lprincewhn.github.io/assets/images/2020-02-07-credadmin-2.jpg)
 
 ### 1.2 创建Secret
 
 按照下图创建一个Secret用于存放临时credential，需要访问敏感数据的S3桶的时候需要从中读取。
 
-![2020-02-07-Secret-1.png](http://lprincewhn.github.io/assets/images/2020-02-07-Secret-1.png)
+![2020-02-07-Secret-1.jpg](http://lprincewhn.github.io/assets/images/2020-02-07-Secret-1.jpg)
 
 ### 1.3 创建角色
 
 1. EC2Normal：这是附加到EC2实例上的角色，因此Trusted Entity选择EC2，权限至少需要包含Secret：SensitiveS3的读取权限。
 
-![2020-02-07-EC2Normal-1.png](http://lprincewhn.github.io/assets/images/2020-02-07-EC2Normal-1.png)
+![2020-02-07-EC2Normal-1.jpg](http://lprincewhn.github.io/assets/images/2020-02-07-EC2Normal-1.jpg)
 
 2. SensitiveS3Access：
 
 该角色用于访问敏感S3桶Sensitive.xxxxxx，其权限可以在Role Permission中配置，也可以在S3桶的Bucket Policy中配置。本次实验采用后者，此时无需配置任何Policy。
 
-![2020-02-07-SensitiveS3Access-1.png](http://lprincewhn.github.io/assets/images/2020-02-07-SensitiveS3Access-1.png)
+![2020-02-07-SensitiveS3Access-1.jpg](http://lprincewhn.github.io/assets/images/2020-02-07-SensitiveS3Access-1.jpg)
 
 创建时指定Trusted Entity为一个AWS账号，表示只有该AWS账号的Root用户才能使用该角色。手动修改Trusted Entity，指定为前面创建的IAM User：credadmin。
-```
+``` json
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -75,13 +75,13 @@ credamin的访问类型为“Programmatic access”，这种类型的用户会�
 ```
 
 角色创建成功后，其Token的默认有效期为1个小时，可手动修改为其他时间，最大不超过12小时。
-![2020-02-07-SensitiveS3Access-3.png](http://lprincewhn.github.io/assets/images/2020-02-07-SensitiveS3Access-3.png)
+![2020-02-07-SensitiveS3Access-3.jpg](http://lprincewhn.github.io/assets/images/2020-02-07-SensitiveS3Access-3.jpg)
 
 
 ### 1.4 创建存放敏感数据的S3桶
 
 S3桶创建完毕后，上传一个文件，如“case.png“，用于测试，修改其Bucket policy，赋予角色SensitiveS3Access完全访问权限。
-```
+``` json
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -102,7 +102,7 @@ S3桶创建完毕后，上传一个文件，如“case.png“，用于测试，�
 
 编写程序，调用API生成角色SensitiveS3Access的临时credential，包括Access Key ID，Secret Access Key和临时credential独有的Session Token。
 
-```
+``` python
 import boto3
 import json
 import pprint
@@ -134,11 +134,11 @@ response = sm_client.put_secret_value(
 
 ### 1.6. 启动EC2，附加默认角色EC2Normal
 
-![2020-02-07-EC2-1.png](http://lprincewhn.github.io/assets/images/2020-02-07-EC2-1.png)
+![2020-02-07-EC2-1.jpg](http://lprincewhn.github.io/assets/images/2020-02-07-EC2-1.jpg)
 
 ### 1.7. 在EC2上运行访问S3桶的程序
 
-```
+``` python
 import json
 import boto3
 import pprint
