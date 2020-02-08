@@ -1,0 +1,185 @@
+---
+layout: post
+title: 使用AWS Role实现临时授权
+key: 20200207
+tags: aws security role
+modify_date: 2020-02-07
+---
+
+AWS的可通过两类实体进行授权：User和Role。其中User赋予的权限是长期的，客户端使用User登陆时都会拿到该User的credential，这个credential是长期有效的。除非手动将其失效，否则用户可以永久使用这个credential访问AWS资源。而Role赋予的权限是临时，客户端可通过assumeRole的调用获取该角色的credential。和User credential的区别在于，Role credential存在有效期，有效期过后该credential自动失效。因此，利用Role credential可实现临时授权。
+
+<!--more-->
+
+## 0. 准备
+
+### 0.1 场景
+用户定义了一个用于存储敏感数据的S3桶，希望最小化该桶的访问权限，需要访问的时候临时授权，而两小时后权限自动失效。
+
+### 0.2 实验环境
+
+![2020-02-07-flow-1.png](http://lprincewhn.github.io/assets/images/2020-02-07-flow-1.png)
+
+IAM
+    User: credadmin，管理员，负责生成访问S3资源的临时credential，并且将其存入Secret Manager中，因此需要Secret Manager的写入权限。
+    Role: EC2Normal，附加到EC2实例上的角色，默认情况，EC2实例中运行的程序使用该角色访问其他AWS资源，该角色不包含敏感S3桶的访问权限。
+    Role: SensitiveS3Access，用于访问敏感S3桶的角色。
+Secret Manager
+    Secret：SensitiveS3，用于存储临时credential，其中包括AccessKeyId，SecretAccessKey，SessionToken。
+EC2和S3
+    EC2：用于验证，运行访问敏感S3桶的应用程序。
+    Bucket：Sensitive.xxxxxx，用于验证，存放敏感数据的S3桶。
+
+## 1. 步骤
+
+### 1.1 创建IAM User
+
+credamin的访问类型为“Programmatic access”，这种类型的用户会自动生成通过API访问AWS资源所需的User credential，即Access Key ID和Secret Access Key，用户创建成功后请记下这两个值。
+
+![2020-02-07-credadmin-1.png](http://lprincewhn.github.io/assets/images/2020-02-07-credadmin-1.png)
+
+![2020-02-07-credadmin-2.png](http://lprincewhn.github.io/assets/images/2020-02-07-credadmin-2.png)
+
+### 1.2 创建Secret
+
+按照下图创建一个Secret用于存放临时credential，需要访问敏感数据的S3桶的时候需要从中读取。
+
+![2020-02-07-Secret-1.png](http://lprincewhn.github.io/assets/images/2020-02-07-Secret-1.png)
+
+### 1.3 创建角色
+
+1. EC2Normal：这是附加到EC2实例上的角色，因此Trusted Entity选择EC2，权限至少需要包含Secret：SensitiveS3的读取权限。
+
+![2020-02-07-EC2Normal-1.png](http://lprincewhn.github.io/assets/images/2020-02-07-EC2Normal-1.png)
+
+2. SensitiveS3Access：
+
+该角色用于访问敏感S3桶Sensitive.xxxxxx，其权限可以在Role Permission中配置，也可以在S3桶的Bucket Policy中配置。本次实验采用后者，此时无需配置任何Policy。
+
+![2020-02-07-SensitiveS3Access-1.png](http://lprincewhn.github.io/assets/images/2020-02-07-SensitiveS3Access-1.png)
+
+创建时指定Trusted Entity为一个AWS账号，表示只有该AWS账号的Root用户才能使用该角色。手动修改Trusted Entity，指定为前面创建的IAM User：credadmin。
+```
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::<aws accound id>:user/credadmin"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {}
+    }
+  ]
+}
+```
+
+角色创建成功后，其Token的默认有效期为1个小时，可手动修改为其他时间，最大不超过12小时。
+![2020-02-07-SensitiveS3Access-3.png](http://lprincewhn.github.io/assets/images/2020-02-07-SensitiveS3Access-3.png)
+
+
+### 1.4 创建存放敏感数据的S3桶
+
+S3桶创建完毕后，上传一个文件，如“case.png“，用于测试，修改其Bucket policy，赋予角色SensitiveS3Access完全访问权限。
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::<aws account id>:role/SensitiveS3Access"
+            },
+            "Action": "s3:*",
+            "Resource": "arn:aws:s3:::sensitive.xxxxxx/*"
+        }
+    ]
+}
+```
+
+### 1.5.生成临时credential
+
+编写程序，调用API生成角色SensitiveS3Access的临时credential，包括Access Key ID，Secret Access Key和临时credential独有的Session Token。
+
+```
+import boto3
+import json
+import pprint
+
+# 使用credamin的User credential访问STS
+admin_client = boto3.client(
+    'sts',
+    aws_access_key_id='<access key id of credadmin>',
+    aws_secret_access_key='<secret access key of credadmin>'
+)
+# 调用STS API：assumeRole获取角色SensitiveS3Access的临时credential
+response = admin_client.assume_role(
+    RoleArn='arn:aws:iam::<aws account id>:role/SensitiveS3Access',
+    RoleSessionName='credadmin-authorize-ec2',
+    DurationSeconds=7200
+)
+credentials = response['Credentials']
+pprint.pprint(credentials)
+# 将临时credential存到Secret Manager
+del credentials['Expiration']
+sm_client = boto3.client('secretsmanager')
+response = sm_client.put_secret_value(
+    SecretId='SensitiveS3',
+    SecretString=json.dumps(response['Credentials'])
+)
+```
+
+执行上述程序后，将可以在Secret Manager中看到临时credential。
+
+### 1.6. 启动EC2，附加默认角色EC2Normal
+
+![2020-02-07-EC2-1.png](http://lprincewhn.github.io/assets/images/2020-02-07-EC2-1.png)
+
+### 1.7. 在EC2上运行访问S3桶的程序
+
+```
+import json
+import boto3
+import pprint
+# 直接访问S3，使用的角色是EC2Normal，将抛出权限异常。
+s3_client = boto3.client(
+    's3'
+)
+try:
+    response = s3_client.get_object_acl(
+        Bucket='sensitive.qfefads',
+        Key='case.png'
+    )
+except:
+    pprint.pprint("由于没有权限导致异常。")
+# 从Secret Manager读取访问S3需要的临时credential
+sm_client = boto3.client('secretsmanager')
+response = sm_client.get_secret_value(
+    SecretId='SensitiveS3',
+)
+credentials = json.loads(response['SecretString'])
+pprint.pprint(credentials)
+# 用临时credential访问S3，使用的角色是SensitiveS3，成功。
+s3_client = boto3.client(
+    's3',
+    aws_access_key_id=credentials['AccessKeyId'],
+    aws_secret_access_key=credentials['SecretAccessKey'],
+    aws_session_token=credentials['SessionToken'],
+)
+response = s3_client.get_object_acl(
+    Bucket='sensitive.xxxxxx',
+    Key='case.png'
+)
+pprint.pprint(response)
+```
+
+由于TOKEN有效期被配置成了两小时，两小时内运行以上程序将可以获取到对象的ACL。如果两小时内没有重新生成临时credentia了，两小时后重新运行以上程序，则会报“Token过期”错误。
+```
+botocore.exceptions.ClientError: An error occurred (ExpiredToken) when calling the GetObjectAcl operation: The provided token has expired.
+```
+
+## 2. 其他细节
+1. 如何翻译AssumeRole：申请另一个角色的权限。
+2. 可否不使用SecretManager？可以，但SecretManger是一个安全，合理的credential的存放位置。
+3. Secret的访问权限不够细致，EC2Normal应该只能读取他需要的Secret，无需整个Secret的读写权限。
