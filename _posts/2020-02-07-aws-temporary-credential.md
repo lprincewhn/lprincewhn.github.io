@@ -182,7 +182,7 @@ s3_client = boto3.client(
 )
 try:
     response = s3_client.get_object_acl(
-        Bucket='sensitive.qfefads',
+        Bucket='sensitive.xxxxxx',
         Key='case.png'
     )
 except:
