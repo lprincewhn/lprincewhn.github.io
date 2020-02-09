@@ -103,7 +103,7 @@ S3桶创建完毕后，上传一个文件，如“case.png“，用于测试，�
 }
 ```
 
-### 1.5. 生成临时credential
+### 1.5 生成临时credential
 
 编写程序，调用API生成角色SensitiveS3Access的临时credential，包括Access Key ID，Secret Access Key和临时credential独有的Session Token。
 
@@ -156,7 +156,7 @@ response = sm_client.put_secret_value(
 
 执行上述程序后，将输出一个用于控制台访问的URL，并可以在Secret Manager中看到生成的临时credential。
 
-### 1.6. 访问控制台URL
+### 1.6 访问控制台URL
 
 在浏览器中输入上一步中生成的URL，可直接登陆到AWS控制台，留意左上方的登陆信息，可以看到此时登陆的身份为“SensitiveS3Access/credadmin-authorize-ec2”。
 
@@ -166,11 +166,11 @@ SensitiveS3Access是当前使用的角色，credadmin-authorize-ec2是调用assu
 
 ![2020-02-07-cloudtrail-1.jpg](http://lprincewhn.github.io/assets/images/2020-02-07-cloudtrail-1.jpg)
 
-### 1.7. 启动EC2，附加默认角色EC2Normal
+### 1.7 启动EC2，附加默认角色EC2Normal
 
 ![2020-02-07-EC2-1.jpg](http://lprincewhn.github.io/assets/images/2020-02-07-EC2-1.jpg)
 
-### 1.8. 在EC2上运行访问S3桶的程序
+### 1.8 在EC2上运行访问S3桶的程序
 
 ``` python
 import json
