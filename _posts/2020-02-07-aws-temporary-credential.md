@@ -103,7 +103,7 @@ S3桶创建完毕后，上传一个文件，如“case.png“，用于测试，�
 }
 ```
 
-### 1.5.生成临时credential
+### 1.5. 生成临时credential
 
 编写程序，调用API生成角色SensitiveS3Access的临时credential，包括Access Key ID，Secret Access Key和临时credential独有的Session Token。
 
@@ -141,7 +141,7 @@ r = requests.get(request_url)
 signin_token = json.loads(r.text)
 request_parameters = "?Action=login" 
 request_parameters += "&Issuer=credadmin" 
-request_parameters += "&Destination=" + urllib.parse.quote_plus("https://console.aws.amazon.com/")
+request_parameters += "&Destination=" + urllib.parse.quote_plus("https://s3.console.aws.amazon.com/s3/buckets/sensitive.xxxxxx/")
 request_parameters += "&SigninToken=" + signin_token["SigninToken"]
 request_url = "https://signin.aws.amazon.com/federation" + request_parameters
 print(request_url)
