@@ -58,7 +58,7 @@ credamin的访问类型为“Programmatic access”，这种类型的用户会�
 
 2. SensitiveS3Access：
 
-该角色用于访问敏感S3桶Sensitive.xxxxxx，其权限可以在Role Permission中配置，也可以在S3桶的Bucket Policy中配置。本次实验采用后者，此时无需配置任何Policy。
+该角色用于访问敏感S3桶sensitive.xxxxxx，其权限可以在Role Permission中配置，也可以在S3桶的Bucket Policy中配置。本次实验采用后者，此时无需配置任何Policy。
 
 ![2020-02-07-SensitiveS3Access-1.jpg](http://lprincewhn.github.io/assets/images/2020-02-07-SensitiveS3Access-1.jpg)
 
@@ -111,6 +111,8 @@ S3桶创建完毕后，上传一个文件，如“case.png“，用于测试，�
 import boto3
 import json
 import pprint
+import urllib
+import requests
 
 # 使用credamin的User credential访问STS
 admin_client = boto3.client(
@@ -124,24 +126,51 @@ response = admin_client.assume_role(
     RoleSessionName='credadmin-authorize-ec2',
     DurationSeconds=7200
 )
-credentials = response['Credentials']
-pprint.pprint(credentials)
+temp_credentials = {
+    'sessionId': response['Credentials']['AccessKeyId'],
+    'sessionKey': response['Credentials']['SecretAccessKey'],
+    'sessionToken': response['Credentials']['SessionToken']
+}
+
+# 使用临时credential生成控制台访问URL
+request_parameters = "?Action=getSigninToken"
+request_parameters += "&SessionDuration=7200"
+request_parameters += "&Session=" + urllib.parse.quote_plus(json.dumps(temp_credentials))
+request_url = "https://signin.aws.amazon.com/federation" + request_parameters
+r = requests.get(request_url)
+signin_token = json.loads(r.text)
+request_parameters = "?Action=login" 
+request_parameters += "&Issuer=credadmin" 
+request_parameters += "&Destination=" + urllib.parse.quote_plus("https://console.aws.amazon.com/")
+request_parameters += "&SigninToken=" + signin_token["SigninToken"]
+request_url = "https://signin.aws.amazon.com/federation" + request_parameters
+print(request_url)
+
 # 将临时credential存到Secret Manager
-del credentials['Expiration']
 sm_client = boto3.client('secretsmanager')
 response = sm_client.put_secret_value(
     SecretId='SensitiveS3',
-    SecretString=json.dumps(response['Credentials'])
+    SecretString=json.dumps(temp_credentials)
 )
 ```
 
-执行上述程序后，将可以在Secret Manager中看到临时credential。
+执行上述程序后，将输出一个用于控制台访问的URL，并可以在Secret Manager中看到生成的临时credential。
 
-### 1.6. 启动EC2，附加默认角色EC2Normal
+### 1.6. 访问控制台URL
+
+在浏览器中输入上一步中生成的URL，可直接登陆到AWS控制台，留意左上方的登陆信息，可以看到此时登陆的身份为“SensitiveS3Access/credadmin-authorize-ec2”。
+
+![2020-02-07-console-1.jpg](http://lprincewhn.github.io/assets/images/2020-02-07-console-1.jpg)
+
+SensitiveS3Access是当前使用的角色，credadmin-authorize-ec2是调用assumeRole时指定的RoleSessionName参数，可作为该临时credential的用户名，作审计使用。
+
+![2020-02-07-cloudtrail-1.jpg](http://lprincewhn.github.io/assets/images/2020-02-07-cloudtrail-1.jpg)
+
+### 1.7. 启动EC2，附加默认角色EC2Normal
 
 ![2020-02-07-EC2-1.jpg](http://lprincewhn.github.io/assets/images/2020-02-07-EC2-1.jpg)
 
-### 1.7. 在EC2上运行访问S3桶的程序
+### 1.8. 在EC2上运行访问S3桶的程序
 
 ``` python
 import json
@@ -165,12 +194,12 @@ response = sm_client.get_secret_value(
 )
 credentials = json.loads(response['SecretString'])
 pprint.pprint(credentials)
-# 用临时credential访问S3，使用的角色是SensitiveS3，成功。
+# 用临时credential访问S3，使用的角色是SensitiveS3Access，成功。
 s3_client = boto3.client(
     's3',
-    aws_access_key_id=credentials['AccessKeyId'],
-    aws_secret_access_key=credentials['SecretAccessKey'],
-    aws_session_token=credentials['SessionToken'],
+    aws_access_key_id=credentials['sessionId'],
+    aws_secret_access_key=credentials['sessionKey'],
+    aws_session_token=credentials['sessionToken'],
 )
 response = s3_client.get_object_acl(
     Bucket='sensitive.xxxxxx',
@@ -189,4 +218,3 @@ botocore.exceptions.ClientError: An error occurred (ExpiredToken) when calling t
 2. 可否不使用SecretManager？可以，但SecretManger是一个安全，合理的credential的存放位置。
 3. Secret的访问权限不够细致，EC2Normal应该只能读取他需要的Secret，无需整个SecretManager的读写权限。
 4. 如何提高credadmin的长期credential的安全性？不使用User，而是创建一个相同权限的Role，将这个Role附加到特定的EC2实例上，在这个实例上部署生成临时credential的程序。
-5. 临时credential是否可以用于Console登陆？可以。通过临时token拼接出console url，然后通过浏览器访问该URL。
