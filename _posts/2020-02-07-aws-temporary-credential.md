@@ -6,33 +6,35 @@ tags: aws security role
 modify_date: 2020-02-07
 ---
 
-AWS的授权本质是通过一组加密的属性完成的，这组属性称为安全凭证(security credential)。credential有两类：长期的和临时的。最常见的长期credential是为一个普通的IAM User创建的AccessKeyID和SecretAccessKey。除非手动失效，否则客户端可以永久使用这个credential访问AWS资源。而短期credential比长期的多一个属性SessionToken，这个属性定义了credential的有效期，有效期过后该credential自动失效。因此，通过临时credential可以实现临时授权，实现“临时账户”的概念。
+AWS的授权本质是通过一组加密的属性完成的，这组属性称为安全凭证(security credential)。credential有两类：长期的和临时的。最常见的长期credential是为一个普通的IAM User创建的AccessKeyID和SecretAccessKey。除非手动失效，否则客户端可以永久使用这个credential访问AWS资源。而短期credential比长期的多一个属性SessionToken，这个属性定义了credential的有效期，有效期过后该credential自动失效。因此，通过临时credential可以实现临时授权，创建“临时账号”。
 
 <!--more-->
 
 ## 0. 准备
 
-### 0.1 场景
+### 0.1 需求场景
 
-用户定义了一个用于存储敏感数据的S3桶，希望最小化该桶的访问权限，需要访问的时候临时授权，而两小时后权限自动失效。
+作为安全管理员，我希望最小化普通用户访问存储敏感数据的S3桶的权限，需要访问时临时授权，在指定时间后权限自动失效，以避免权限被滥用。
 
 ### 0.2 实验环境
 
-AWS STS提供了多种方法生成临时credential，本文使用其中的assumeRole方式，这种方式中临时credential的权限由IAM Role定义。
+实验架构图如下：
 
 ![2020-02-07-flow-1.jpg](http://lprincewhn.github.io/assets/images/2020-02-07-flow-1.jpg)
 
+AWS STS提供了多种方法生成临时credential，本文使用其中的assumeRole方式，这种方式中临时credential的权限由IAM Role定义。实验所涉及的AWS资源如下：
+
 - IAM
-    - User: credadmin，管理员，负责生成访问S3资源的临时credential，并且将其存入Secret Manager中，因此需要Secret Manager的写入权限。
-    - Role: EC2Normal，附加到EC2实例上的角色，默认情况，EC2实例中运行的程序使用该角色访问其他AWS资源，该角色不包含敏感S3桶的访问权限。
-    - Role: SensitiveS3Access，用于访问敏感S3桶的角色。
+    - User：credadmin，管理员，负责生成访问S3资源的临时credential，并且将其存入Secret Manager中，因此需要Secret Manager的写入权限。
+    - Role：EC2Normal，附加到EC2实例上的角色，默认情况，EC2实例中运行的程序使用该角色访问其他AWS资源，该角色不包含敏感S3桶的访问权限。
+    - Role：SensitiveS3Access，用于访问敏感S3桶的角色。
 - Secret Manager
     - Secret：SensitiveS3，用于存储临时credential，其中包括AccessKeyId，SecretAccessKey，SessionToken。
 - EC2和S3
     - EC2：用于验证，运行访问敏感S3桶的应用程序。
     - Bucket：sensitive.xxxxxx，用于验证，存放敏感数据的S3桶。
 
-## 1. 步骤
+## 1. 实验步骤
 
 ### 1.1 创建IAM User
 
@@ -185,6 +187,6 @@ botocore.exceptions.ClientError: An error occurred (ExpiredToken) when calling t
 ## 2. 几点思考
 1. 如何翻译AssumeRole：申请另一个角色的权限。
 2. 可否不使用SecretManager？可以，但SecretManger是一个安全，合理的credential的存放位置。
-3. Secret的访问权限不够细致，EC2Normal应该只能读取他需要的Secret，无需整个Secret的读写权限。
+3. Secret的访问权限不够细致，EC2Normal应该只能读取他需要的Secret，无需整个SecretManager的读写权限。
 4. 如何提高credadmin的长期credential的安全性？不使用User，而是创建一个相同权限的Role，将这个Role附加到特定的EC2实例上，在这个实例上部署生成临时credential的程序。
-5. 临时token是否可以用于Console登陆？可以。通过临时token拼接出console url，然后通过浏览器访问该URL。
+5. 临时credential是否可以用于Console登陆？可以。通过临时token拼接出console url，然后通过浏览器访问该URL。
