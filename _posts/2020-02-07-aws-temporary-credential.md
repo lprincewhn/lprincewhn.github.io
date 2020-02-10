@@ -56,9 +56,7 @@ credamin的访问类型为“Programmatic access”，这种类型的用户会�
 
 ![2020-02-07-EC2Normal-1.jpg](http://lprincewhn.github.io/assets/images/2020-02-07-EC2Normal-1.jpg)
 
-2. SensitiveS3Access：
-
-该角色用于访问敏感S3桶sensitive.xxxxxx，其权限可以在Role Permission中配置，也可以在S3桶的Bucket Policy中配置。本次实验采用后者，此时无需配置任何Policy。
+2. SensitiveS3Access：该角色用于访问敏感S3桶sensitive.xxxxxx，其权限可以在Role Permission中配置，也可以在S3桶的Bucket Policy中配置。本次实验采用后者，此时无需配置任何Policy。
 
 ![2020-02-07-SensitiveS3Access-1.jpg](http://lprincewhn.github.io/assets/images/2020-02-07-SensitiveS3Access-1.jpg)
 
@@ -80,6 +78,7 @@ credamin的访问类型为“Programmatic access”，这种类型的用户会�
 ```
 
 角色创建成功后，其Token的默认有效期为1个小时，可手动修改为其他时间，最大不超过12小时。
+
 ![2020-02-07-SensitiveS3Access-3.jpg](http://lprincewhn.github.io/assets/images/2020-02-07-SensitiveS3Access-3.jpg)
 
 
