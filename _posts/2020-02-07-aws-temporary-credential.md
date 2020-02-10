@@ -217,4 +217,5 @@ botocore.exceptions.ClientError: An error occurred (ExpiredToken) when calling t
 1. 如何翻译AssumeRole：申请另一个角色的权限。
 2. 可否不使用SecretManager？可以，但SecretManger是一个安全，合理的credential的存放位置。
 3. Secret的访问权限不够细致，EC2Normal应该只能读取他需要的Secret，无需整个SecretManager的读写权限。
-4. 如何提高credadmin的长期credential的安全性？不使用User，而是创建一个相同权限的Role，将这个Role附加到特定的EC2实例上，在这个实例上部署生成临时credential的程序。
+4. 实验中使用了credadmin的长期credential，如何提高其安全性？不使用固定User，而是创建一个相同权限的Role，将这个Role附加到特定的EC2实例或者lambda实例上，由EC2实例或者lambda函数运行生成临时credential的程序。
+5. 部署在lambda中的程序上游可与账号审批流程集成，下游可通过SES将生成的credential或者console URL发送到申请者邮箱，实现整个闭环流程的自助服务。
